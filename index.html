@@ -1,0 +1,326 @@
+cat << 'ENDOFFILE'
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgroService - Registro de Mantenciones</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1a0f;color:#e8f5e9;font-family:Georgia,serif;min-height:100vh;display:flex;flex-direction:column}
+header{background:#162116;border-bottom:1px solid #2a3d2a;position:sticky;top:0;z-index:100}
+.header-inner{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-icon{font-size:28px}
+.logo-title{font-size:18px;font-weight:bold;color:#4ade80;letter-spacing:1px}
+.logo-sub{font-size:11px;color:#86a887;letter-spacing:2px;text-transform:uppercase}
+nav{display:flex;gap:8px}
+.nav-btn{background:transparent;border:1px solid #2a3d2a;color:#86a887;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Georgia,serif}
+.nav-btn.active{background:#166534;border-color:#4ade80;color:#4ade80}
+main{flex:1;max-width:960px;margin:0 auto;padding:30px 20px;width:100%}
+.section{max-width:720px;margin:0 auto;width:100%}
+h2{font-size:24px;font-weight:bold;margin-bottom:24px}
+.hero{text-align:center;padding:40px 20px}
+.hero-badge{display:inline-block;background:#166534;color:#4ade80;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:20px}
+.hero-title{font-size:clamp(28px,5vw,52px);font-weight:bold;line-height:1.2;margin-bottom:16px}
+.hero-desc{font-size:16px;color:#86a887;max-width:500px;margin:0 auto 30px}
+.hero-row{display:flex;gap:8px;max-width:520px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.hero-input{flex:1;min-width:200px;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:8px;padding:12px 16px;color:#e8f5e9;font-size:15px;outline:none;font-family:Georgia,serif}
+.hero-btn{background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:12px 24px;font-weight:bold;font-size:15px;cursor:pointer;font-family:Georgia,serif}
+.stats-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.stat{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;padding:20px 32px;text-align:center;flex:1 1 120px}
+.stat-n{font-size:36px;font-weight:bold;color:#4ade80}
+.stat-l{font-size:12px;color:#86a887;margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+.search-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+input,select,textarea{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:8px;padding:10px 14px;color:#e8f5e9;font-size:14px;outline:none;width:100%;font-family:Georgia,serif}
+.btn{background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;white-space:nowrap;font-family:Georgia,serif}
+.btn-saved{background:#22c55e;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:default;font-family:Georgia,serif}
+.error{color:#f87171;font-size:13px;margin:8px 0}
+.back-btn{background:transparent;border:none;color:#4ade80;cursor:pointer;font-size:14px;margin-bottom:16px;padding:0;font-family:Georgia,serif}
+.result-header{display:flex;align-items:center;justify-content:space-between;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:10px;padding:16px 20px;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.result-title{font-size:18px;font-weight:bold}
+.result-meta{font-size:13px;color:#86a887;margin-top:4px}
+.badge{background:#166534;color:#4ade80;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:bold}
+.timeline{display:flex;flex-direction:column;gap:12px}
+.tl-item{display:flex;gap:16px;cursor:pointer}
+.tl-dot{width:12px;height:12px;border-radius:50%;background:#4ade80;margin-top:6px;flex-shrink:0;box-shadow:0 0 8px #4ade80}
+.tl-card{flex:1;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:10px;padding:14px 18px}
+.tl-top{display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.tl-tipo{font-weight:bold;font-size:14px}
+.tl-fecha{font-size:12px;color:#86a887}
+.tl-works{font-size:13px;color:#86a887;margin-bottom:6px}
+.tl-meta{font-size:12px;color:#4a6b4a}
+.tl-link{font-size:12px;color:#4ade80;margin-top:6px}
+.detail-card{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;overflow:hidden}
+.detail-head{background:#162116;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #2a3d2a}
+.detail-tipo{font-size:20px;font-weight:bold}
+.detail-fecha{font-size:13px;color:#86a887;margin-top:4px;text-transform:capitalize}
+.detail-hrs{font-size:28px;font-weight:bold;color:#4ade80}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#2a3d2a}
+.detail-block{background:#1c2b1c;padding:16px 20px}
+.dbt{font-size:11px;color:#86a887;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.dbv{font-size:15px;font-weight:bold}
+.dbs{font-size:12px;color:#86a887;margin-top:2px}
+.ds{padding:16px 24px;border-top:1px solid #2a3d2a}
+.dst{font-size:12px;color:#86a887;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.dl{list-style:none;display:flex;flex-direction:column;gap:6px}
+.dli{font-size:14px;padding:4px 0}
+.dobs{font-size:14px;color:#86a887;line-height:1.6;font-style:italic;background:#162116;padding:12px 16px;border-radius:8px;border-left:3px solid #4ade80}
+.login-card{max-width:400px;margin:40px auto;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;padding:32px;text-align:center;display:flex;flex-direction:column;gap:14px}
+.login-icon{font-size:40px}
+.login-title{font-size:22px;font-weight:bold}
+.login-desc{font-size:14px;color:#86a887}
+.hint{font-size:12px;color:#4a6b4a;margin-top:6px}
+.block{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;padding:24px;margin-bottom:24px}
+.subtitle{font-size:16px;font-weight:bold;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg.full{grid-column:1/-1}
+label{font-size:12px;color:#86a887;text-transform:uppercase;letter-spacing:1px}
+textarea{resize:vertical}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.rec-card{background:#162116;border:1px solid #2a3d2a;border-radius:8px;padding:12px 14px}
+.rec-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.rec-tipo{font-size:11px;color:#4ade80;font-weight:bold;text-transform:uppercase}
+.rec-fecha{font-size:11px;color:#86a887}
+.rec-tractor{font-size:14px;font-weight:bold;margin-bottom:2px}
+.rec-chasis{font-size:12px;color:#86a887;margin-bottom:4px}
+.rec-meta{font-size:12px;color:#4a6b4a}
+.loading{color:#86a887;font-size:14px;padding:20px 0}
+footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1px solid #2a3d2a}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo" onclick="showView('home')">
+      <span class="logo-icon">⚙</span>
+      <div>
+        <div class="logo-title">AgroService</div>
+        <div class="logo-sub">Registro de Mantenciones</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn" id="btn-buscar" onclick="showView('buscar')">🔍 Consultar</button>
+      <button class="nav-btn" id="btn-panel" onclick="showView('panel')">🔧 Mecánico</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <div id="view-home">
+    <div class="hero">
+      <div class="hero-badge">Sistema de Trazabilidad Agrícola</div>
+      <h1 class="hero-title">Historial completo<br/>de tu maquinaria</h1>
+      <p class="hero-desc">Consulta todas las mantenciones de tu tractor ingresando el número de chasis.</p>
+      <div class="hero-row">
+        <input class="hero-input" id="hero-chasis" placeholder="Ej: JD-4045-2019-001" onkeydown="if(event.key==='Enter'){showView('buscar');setTimeout(doSearch,100)}"/>
+        <button class="hero-btn" onclick="showView('buscar');setTimeout(doSearch,100)">Buscar →</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="stat-total">0</div><div class="stat-l">Servicios registrados</div></div>
+      <div class="stat"><div class="stat-n" id="stat-tractores">0</div><div class="stat-l">Tractores en sistema</div></div>
+      <div class="stat"><div class="stat-n" id="stat-clientes">0</div><div class="stat-l">Clientes activos</div></div>
+    </div>
+  </div>
+
+  <!-- BUSCAR -->
+  <div id="view-buscar" class="section hidden">
+    <h2>Consulta por Número de Chasis</h2>
+    <div class="search-row">
+      <input id="search-chasis" placeholder="Ingresa el número de chasis..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      <button class="btn" onclick="doSearch()">Buscar</button>
+    </div>
+    <div id="search-error" class="error hidden"></div>
+    <div id="search-result" class="hidden"></div>
+  </div>
+
+  <!-- DETALLE -->
+  <div id="view-detalle" class="section hidden">
+    <button class="back-btn" onclick="showView('buscar')">← Volver al historial</button>
+    <div id="detalle-content"></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="view-login" class="section hidden">
+    <div class="login-card">
+      <div class="login-icon">🔐</div>
+      <h2 class="login-title">Acceso Mecánico</h2>
+      <p class="login-desc">Ingresa tu contraseña para acceder al panel de registro.</p>
+      <input id="admin-pass" type="password" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="btn" onclick="doLogin()">Ingresar</button>
+      <div id="login-error" class="error hidden"></div>
+      <div class="hint">Contraseña: <code>mecanico123</code></div>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="view-panel" class="section hidden">
+    <h2>Panel del Mecánico</h2>
+    <div class="block">
+      <div class="subtitle">➕ Registrar Nueva Mantención</div>
+      <div class="form-grid">
+        <div class="fg"><label>Número de Chasis *</label><input id="f-chasis" placeholder="Ej: JD-4045-2019-001"/></div>
+        <div class="fg"><label>Nombre del Cliente *</label><input id="f-cliente" placeholder="Nombre completo"/></div>
+        <div class="fg"><label>Modelo del Tractor *</label><input id="f-tractor" placeholder="Ej: John Deere 5075E"/></div>
+        <div class="fg"><label>Fecha del Servicio *</label><input id="f-fecha" type="date"/></div>
+        <div class="fg"><label>Tipo de Servicio</label>
+          <select id="f-tipo">
+            <option>Mantención Preventiva</option>
+            <option>Mantención Correctiva</option>
+            <option>Diagnóstico</option>
+            <option>Reparación Mayor</option>
+            <option>Revisión General</option>
+          </select>
+        </div>
+        <div class="fg"><label>Horas de Motor</label><input id="f-horas" type="number" placeholder="Ej: 1250"/></div>
+        <div class="fg"><label>Nombre del Mecánico</label><input id="f-mecanico" placeholder="Tu nombre"/></div>
+        <div class="fg full"><label>Trabajos Realizados * (uno por línea)</label><textarea id="f-trabajos" rows="4" placeholder="Cambio aceite motor&#10;Filtro de aceite&#10;Revisión correas"></textarea></div>
+        <div class="fg full"><label>Repuestos Utilizados (uno por línea)</label><textarea id="f-repuestos" rows="3" placeholder="Aceite 15W40 - 10L&#10;Filtro aceite RE504836"></textarea></div>
+        <div class="fg full"><label>Observaciones</label><textarea id="f-obs" rows="3" placeholder="Estado general, próxima mantención..."></textarea></div>
+      </div>
+      <div id="save-error" class="error hidden"></div>
+      <button class="btn" id="btn-save" onclick="doSave()">Guardar Registro</button>
+    </div>
+    <div class="block">
+      <div class="subtitle">📋 Historial completo</div>
+      <div id="panel-records" class="loading">Cargando...</div>
+    </div>
+  </div>
+</main>
+
+<footer>AgroService · Sistema de Mantenciones · Conectado a Supabase</footer>
+
+<script>
+const URL = 'https://fozsdegtzsnyjxbgxbjf.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvenNkZWd0enNueWp4Ymd4YmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDYwMjgsImV4cCI6MjA5NjAyMjAyOH0.SNF6mqL665SX-ot__BAutzfVGPGK0S8wwSgpt0hL7iw';
+const H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+let currentView = 'home';
+let adminOk = false;
+let searchResults = [];
+
+async function api(path, opts={}) {
+  const r = await fetch(URL+'/rest/v1'+path, {headers:H, ...opts});
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+function showView(v) {
+  ['home','buscar','detalle','login','panel'].forEach(x => {
+    document.getElementById('view-'+x).classList.add('hidden');
+    const b = document.getElementById('btn-'+x);
+    if(b) b.classList.remove('active');
+  });
+  if(v === 'panel' && !adminOk) v = 'login';
+  document.getElementById('view-'+v).classList.remove('hidden');
+  const b = document.getElementById('btn-'+(v==='login'?'panel':v));
+  if(b) b.classList.add('active');
+  currentView = v;
+  if(v === 'home') loadStats();
+  if(v === 'panel') loadPanelRecords();
+  const hc = document.getElementById('hero-chasis');
+  const sc = document.getElementById('search-chasis');
+  if(v === 'buscar' && hc && hc.value) sc.value = hc.value;
+}
+
+async function loadStats() {
+  try {
+    const d = await api('/mantenciones?select=chasis,cliente');
+    document.getElementById('stat-total').textContent = d.length;
+    document.getElementById('stat-tractores').textContent = new Set(d.map(r=>r.chasis)).size;
+    document.getElementById('stat-clientes').textContent = new Set(d.map(r=>r.cliente)).size;
+  } catch(e){}
+}
+
+async function doSearch() {
+  const chasis = document.getElementById('search-chasis').value.trim().toUpperCase();
+  const errEl = document.getElementById('search-error');
+  const resEl = document.getElementById('search-result');
+  errEl.classList.add('hidden'); resEl.classList.add('hidden');
+  if(!chasis){errEl.textContent='Ingresa un número de chasis.';errEl.classList.remove('hidden');return;}
+  resEl.innerHTML='<div class="loading">Buscando...</div>'; resEl.classList.remove('hidden');
+  try {
+    const d = await api('/mantenciones?chasis=ilike.'+encodeURIComponent(chasis)+'&order=fecha.desc');
+    if(!d.length){resEl.classList.add('hidden');errEl.textContent='No se encontraron registros para ese chasis.';errEl.classList.remove('hidden');return;}
+    searchResults = d;
+    resEl.innerHTML = `<div class="result-header"><div><div class="result-title">🚜 ${d[0].tractor}</div><div class="result-meta">Chasis: <b>${d[0].chasis}</b> · Cliente: <b>${d[0].cliente}</b></div></div><div class="badge">${d.length} servicio${d.length>1?'s':''}</div></div>`
+    + '<div class="timeline">' + d.map((r,i) => `<div class="tl-item" onclick="showDetail(${i})"><div class="tl-dot"></div><div class="tl-card"><div class="tl-top"><span class="tl-tipo">${r.tipo}</span><span class="tl-fecha">${fmtDate(r.fecha)}</span></div><div class="tl-works">${(r.trabajos||[]).slice(0,2).join(' · ')}${(r.trabajos||[]).length>2?' +'+(r.trabajos.length-2)+' más':''}</div><div class="tl-meta">🕐 ${r.horas_motor} hrs · ${r.mecanico||''}</div><div class="tl-link">Ver detalle completo →</div></div></div>`).join('') + '</div>';
+  } catch(e){errEl.textContent='Error al buscar.';errEl.classList.remove('hidden');resEl.classList.add('hidden');}
+}
+
+function showDetail(i) {
+  const r = searchResults[i];
+  document.getElementById('detalle-content').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-head"><div><div class="detail-tipo">${r.tipo}</div><div class="detail-fecha">${fmtDateLong(r.fecha)}</div></div><div class="detail-hrs">${r.horas_motor} hrs</div></div>
+      <div class="detail-grid">
+        <div class="detail-block"><div class="dbt">🚜 Equipo</div><div class="dbv">${r.tractor}</div><div class="dbs">Chasis: ${r.chasis}</div></div>
+        <div class="detail-block"><div class="dbt">👤 Cliente</div><div class="dbv">${r.cliente}</div></div>
+        <div class="detail-block"><div class="dbt">🔧 Mecánico</div><div class="dbv">${r.mecanico||'-'}</div></div>
+      </div>
+      <div class="ds"><div class="dst">Trabajos realizados</div><ul class="dl">${(r.trabajos||[]).map(t=>`<li class="dli">✓ ${t}</li>`).join('')}</ul></div>
+      ${(r.repuestos||[]).length?`<div class="ds"><div class="dst">Repuestos utilizados</div><ul class="dl">${r.repuestos.map(x=>`<li class="dli">• ${x}</li>`).join('')}</ul></div>`:''}
+      ${r.observaciones?`<div class="ds"><div class="dst">Observaciones</div><div class="dobs">${r.observaciones}</div></div>`:''}
+    </div>`;
+  showView('detalle');
+}
+
+function doLogin() {
+  const p = document.getElementById('admin-pass').value;
+  const e = document.getElementById('login-error');
+  if(p === 'mecanico123'){adminOk=true;e.classList.add('hidden');showView('panel');}
+  else{e.textContent='Contraseña incorrecta.';e.classList.remove('hidden');}
+}
+
+async function doSave() {
+  const chasis = document.getElementById('f-chasis').value.trim();
+  const cliente = document.getElementById('f-cliente').value.trim();
+  const tractor = document.getElementById('f-tractor').value.trim();
+  const fecha = document.getElementById('f-fecha').value;
+  const trabajos = document.getElementById('f-trabajos').value;
+  const errEl = document.getElementById('save-error');
+  errEl.classList.add('hidden');
+  if(!chasis||!cliente||!tractor||!fecha||!trabajos){errEl.textContent='Completa los campos obligatorios (*).';errEl.classList.remove('hidden');return;}
+  const btn = document.getElementById('btn-save');
+  btn.textContent='Guardando...'; btn.disabled=true;
+  try {
+    await api('/mantenciones', {method:'POST', body:JSON.stringify({
+      chasis: chasis.toUpperCase(),
+      cliente, tractor, fecha,
+      tipo: document.getElementById('f-tipo').value,
+      horas_motor: parseInt(document.getElementById('f-horas').value)||0,
+      trabajos: trabajos.split('\n').map(t=>t.trim()).filter(Boolean),
+      repuestos: document.getElementById('f-repuestos').value.split('\n').map(t=>t.trim()).filter(Boolean),
+      observaciones: document.getElementById('f-obs').value,
+      mecanico: document.getElementById('f-mecanico').value
+    })});
+    btn.textContent='✓ ¡Guardado!'; btn.className='btn-saved';
+    ['f-chasis','f-cliente','f-tractor','f-fecha','f-horas','f-mecanico','f-trabajos','f-repuestos','f-obs'].forEach(id=>document.getElementById(id).value='');
+    setTimeout(()=>{btn.textContent='Guardar Registro';btn.className='btn';btn.disabled=false;},3000);
+    loadPanelRecords();
+  } catch(e){errEl.textContent='Error al guardar: '+e.message;errEl.classList.remove('hidden');btn.textContent='Guardar Registro';btn.disabled=false;}
+}
+
+async function loadPanelRecords() {
+  const el = document.getElementById('panel-records');
+  el.innerHTML='<div class="loading">Cargando...</div>';
+  try {
+    const d = await api('/mantenciones?select=*&order=fecha.desc');
+    if(!d.length){el.innerHTML='<div class="loading">Sin registros aún.</div>';return;}
+    el.innerHTML='<div class="rec-grid">'+d.map(r=>`<div class="rec-card"><div class="rec-top"><span class="rec-tipo">${r.tipo}</span><span class="rec-fecha">${new Date(r.fecha+'T12:00:00').toLocaleDateString('es-CL')}</span></div><div class="rec-tractor">${r.tractor}</div><div class="rec-chasis">Chasis: ${r.chasis}</div><div class="rec-meta">👤 ${r.cliente} · 🕐 ${r.horas_motor} hrs</div></div>`).join('')+'</div>';
+  } catch(e){el.innerHTML='<div class="error">Error al cargar registros.</div>';}
+}
+
+function fmtDate(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'})}
+function fmtDateLong(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}
+
+loadStats();
+</script>
+</body>
+</html>
+ENDOFFILE
+echo "LISTO"
