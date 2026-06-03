@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MN AgroService - Registro de Mantenciones</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><title>MN AgroService - Registro de Mantenciones</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0f1a0f;color:#e8f5e9;font-family:Georgia,serif;min-height:100vh;display:flex;flex-direction:column}
@@ -264,7 +264,7 @@ function showDetail(i) {
       </div>
       <div class="ds"><div class="dst">Trabajos realizados</div><ul class="dl">${(r.trabajos||[]).map(t=>`<li class="dli">✓ ${t}</li>`).join('')}</ul></div>
       ${(r.repuestos||[]).length?`<div class="ds"><div class="dst">Repuestos utilizados</div><ul class="dl">${r.repuestos.map(x=>`<li class="dli">• ${x}</li>`).join('')}</ul></div>`:''}
-      ${r.observaciones?`<div class="ds"><div class="dst">Observaciones</div><div class="dobs">${r.observaciones}</div></div>`:''}
+      ${r.observaciones?`<div class="ds"><button onclick="descargarPDF()" style="background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;width:100%">📄 Descargar PDF</button></div>
     </div>`;
   showView('detalle');
 }
@@ -323,6 +323,10 @@ async function deleteRecord(id) {
     await api('/mantenciones?id=eq.'+id, {method:'DELETE', prefer:'return=minimal'});
     loadPanelRecords();
   } catch(e){ alert('Error al eliminar'); }
+}
+function descargarPDF() {
+  const el = document.getElementById('detalle-content');
+  html2pdf().set({margin:10, filename:'mantención.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'}}).from(el).save();
 }
 loadStats();
 </script>
