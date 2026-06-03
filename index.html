@@ -311,13 +311,19 @@ async function loadPanelRecords() {
   try {
     const d = await api('/mantenciones?select=*&order=fecha.desc');
     if(!d.length){el.innerHTML='<div class="loading">Sin registros aún.</div>';return;}
-    el.innerHTML='<div class="rec-grid">'+d.map(r=>`<div class="rec-card"><div class="rec-top"><span class="rec-tipo">${r.tipo}</span><span class="rec-fecha">${new Date(r.fecha+'T12:00:00').toLocaleDateString('es-CL')}</span></div><div class="rec-tractor">${r.tractor}</div><div class="rec-chasis">Chasis: ${r.chasis}</div><div class="rec-meta">👤 ${r.cliente} · 🕐 ${r.horas_motor} hrs</div></div>`).join('')+'</div>';
+    el.innerHTML='<div class="rec-grid">'+d.map(r=>`<div class="rec-card"><div class="rec-top"><span class="rec-tipo">${r.tipo}</span><span class="rec-fecha">${new Date(r.fecha+'T12:00:00').toLocaleDateString('es-CL')}</span></div><div class="rec-tractor">${r.tractor}</div><div class="rec-chasis">Chasis: ${r.chasis}</div><div class="rec-meta">👤 ${r.cliente} · 🕐 ${r.horas_motor} hrs</div><button onclick="deleteRecord(${r.id})" style="margin-top:8px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;width:100%">🗑️ Eliminar registro</button></div>`).join('')+'</div>';
   } catch(e){el.innerHTML='<div class="error">Error al cargar registros.</div>';}
 }
 
 function fmtDate(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'})}
 function fmtDateLong(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}
-
+async function deleteRecord(id) {
+  if(!confirm('¿Seguro que deseas eliminar este registro?')) return;
+  try {
+    await api('/mantenciones?id=eq.'+id, {method:'DELETE', prefer:'return=minimal'});
+    loadPanelRecords();
+  } catch(e){ alert('Error al eliminar'); }
+}
 loadStats();
 </script>
 </body>
