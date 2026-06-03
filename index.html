@@ -71,6 +71,7 @@ input,select,textarea{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:
 .dli{font-size:14px;padding:4px 0}
 .dobs{font-size:14px;color:#86a887;line-height:1.6;font-style:italic;background:#162116;padding:12px 16px;border-radius:8px;border-left:3px solid #4ade80}
 .firma-canvas{border:2px solid #2a3d2a;border-radius:8px;background:#fff;cursor:crosshair;display:block;width:100%;touch-action:none}
+.firma-guardada img{max-width:200px;border:1px solid #2a3d2a;border-radius:6px;background:#fff}
 .login-card{max-width:400px;margin:40px auto;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;padding:32px;text-align:center;display:flex;flex-direction:column;gap:14px}
 .login-icon{font-size:40px}
 .login-title{font-size:22px;font-weight:bold}
@@ -94,7 +95,6 @@ textarea{resize:vertical}
 .loading{color:#86a887;font-size:14px;padding:20px 0}
 footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1px solid #2a3d2a}
 .hidden{display:none}
-.firma-guardada{border:1px solid #2a3d2a;border-radius:8px;padding:12px;background:#162116}
 </style>
 </head>
 <body>
@@ -148,9 +148,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
   <div id="view-detalle" class="section hidden">
     <button class="back-btn" onclick="showView('buscar')">← Volver al historial</button>
     <div id="detalle-content"></div>
-    <div style="margin-top:12px">
-      <button class="btn-pdf" onclick="descargarPDF()">📄 Descargar PDF</button>
-    </div>
+    <button class="btn-pdf" onclick="descargarPDF()">📄 Descargar Orden de Trabajo (PDF)</button>
   </div>
 
   <!-- LOGIN -->
@@ -166,7 +164,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
     </div>
   </div>
 
-  <!-- PANEL MECÁNICO -->
+  <!-- PANEL -->
   <div id="view-panel" class="section hidden">
     <h2>Panel del Mecánico</h2>
     <div class="block">
@@ -191,8 +189,6 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
         <div class="fg full"><label>Repuestos Utilizados (uno por línea)</label><textarea id="f-repuestos" rows="3" placeholder="Aceite 15W40 - 10L&#10;Filtro aceite RE504836"></textarea></div>
         <div class="fg full"><label>Observaciones</label><textarea id="f-obs" rows="3" placeholder="Estado general, próxima mantención..."></textarea></div>
       </div>
-
-      <!-- FIRMA DEL CLIENTE -->
       <div style="border:1px solid #2a3d2a;border-radius:10px;padding:20px;margin-bottom:20px;background:#162116">
         <div class="subtitle" style="color:#4ade80">✍️ Conformidad del Cliente</div>
         <div class="fg" style="margin-bottom:12px">
@@ -204,12 +200,10 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
         <button class="btn-clear" onclick="limpiarFirma()">🗑️ Limpiar firma</button>
         <p style="font-size:11px;color:#4a6b4a;margin-top:8px">Al firmar, el cliente confirma conformidad con el servicio realizado.</p>
       </div>
-
       <div id="save-error" class="error hidden"></div>
       <div id="save-success" class="success hidden"></div>
       <button class="btn" id="btn-save" onclick="doSave()" style="width:100%;padding:14px;font-size:16px">💾 Guardar Registro con Firma</button>
     </div>
-
     <div class="block">
       <div class="subtitle">📋 Historial completo</div>
       <div id="panel-records" class="loading">Cargando...</div>
@@ -219,11 +213,14 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
 
 <footer>MN AgroService · Sistema de Mantenciones · Reparación · Soldadura · Repuestos</footer>
 
+<!-- PLANTILLA PDF (invisible) -->
+<div id="pdf-template" style="display:none"></div>
+
 <script>
 const SURL='https://fozsdegtzsnyjxbgxbjf.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvenNkZWd0enNueWp4Ymd4YmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDYwMjgsImV4cCI6MjA5NjAyMjAyOH0.SNF6mqL665SX-ot__BAutzfVGPGK0S8wwSgpt0hL7iw';
 const H={'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'};
-let adminOk=false, searchResults=[], firmaCtx=null, firmaDrawing=false, firmaInited=false;
+let adminOk=false,searchResults=[],firmaCtx=null,firmaDrawing=false,firmaInited=false,currentRecord=null;
 
 async function api(path,opts={}){
   const r=await fetch(SURL+'/rest/v1'+path,{headers:H,...opts});
@@ -266,23 +263,19 @@ async function doSearch(){
   resEl.innerHTML='<div class="loading">Buscando...</div>';resEl.classList.remove('hidden');
   try{
     const d=await api('/mantenciones?chasis=ilike.'+encodeURIComponent(chasis)+'&order=fecha.desc');
-    if(!d.length){resEl.classList.add('hidden');errEl.textContent='No se encontraron registros para ese chasis.';errEl.classList.remove('hidden');return;}
+    if(!d.length){resEl.classList.add('hidden');errEl.textContent='No se encontraron registros.';errEl.classList.remove('hidden');return;}
     searchResults=d;
     resEl.innerHTML=`<div class="result-header"><div><div class="result-title">🚜 ${d[0].tractor}</div><div class="result-meta">Chasis: <b>${d[0].chasis}</b> · Cliente: <b>${d[0].cliente}</b></div></div><div class="badge">${d.length} servicio${d.length>1?'s':''}</div></div>`
-    +'<div class="timeline">'+d.map((r,i)=>`<div class="tl-item" onclick="showDetail(${i})"><div class="tl-dot"></div><div class="tl-card"><div class="tl-top"><span class="tl-tipo">${r.tipo}</span><span class="tl-fecha">${fmtDate(r.fecha)}</span></div><div class="tl-works">${(r.trabajos||[]).slice(0,2).join(' · ')}${(r.trabajos||[]).length>2?' +'+(r.trabajos.length-2)+' más':''}</div><div class="tl-meta">🕐 ${r.horas_motor} hrs · ${r.mecanico||''}</div><div class="tl-link">Ver detalle completo →</div></div></div>`).join('')+'</div>';
+    +'<div class="timeline">'+d.map((r,i)=>`<div class="tl-item" onclick="showDetail(${i})"><div class="tl-dot"></div><div class="tl-card"><div class="tl-top"><span class="tl-tipo">${r.tipo}</span><span class="tl-fecha">${fmtDate(r.fecha)}</span></div><div class="tl-works">${(r.trabajos||[]).slice(0,2).join(' · ')}${(r.trabajos||[]).length>2?' +'+(r.trabajos.length-2)+' más':''}</div><div class="tl-meta">🕐 ${r.horas_motor} hrs · ${r.mecanico||''}</div><div class="tl-link">Ver detalle →</div></div></div>`).join('')+'</div>';
   }catch(e){errEl.textContent='Error al buscar.';errEl.classList.remove('hidden');resEl.classList.add('hidden');}
 }
 
 function showDetail(i){
   const r=searchResults[i];
-  const firmaHTML = r.firma_imagen
-    ? `<div class="ds"><div class="dst">✍️ Firma del Cliente</div>
-       <div class="firma-guardada">
-         <div style="font-size:14px;margin-bottom:8px"><b>Firmado por:</b> ${r.firma_nombre||'—'}</div>
-         <img src="${r.firma_imagen}" style="max-width:300px;border:1px solid #2a3d2a;border-radius:6px;background:#fff"/>
-       </div></div>`
-    : `<div class="ds"><div class="dst">✍️ Firma</div><div style="color:#86a887;font-size:13px">Sin firma registrada</div></div>`;
-
+  currentRecord=r;
+  const firmaHTML=r.firma_imagen
+    ?`<div class="ds"><div class="dst">✍️ Firma del Cliente</div><div class="firma-guardada"><div style="font-size:14px;margin-bottom:8px"><b>Firmado por:</b> ${r.firma_nombre||'—'}</div><img src="${r.firma_imagen}" style="max-width:200px;border:1px solid #2a3d2a;border-radius:6px;background:#fff"/></div></div>`
+    :`<div class="ds"><div class="dst">✍️ Firma</div><div style="color:#86a887;font-size:13px">Sin firma registrada</div></div>`;
   document.getElementById('detalle-content').innerHTML=`
     <div class="detail-card">
       <div class="detail-head"><div><div class="detail-tipo">${r.tipo}</div><div class="detail-fecha">${fmtDateLong(r.fecha)}</div></div><div class="detail-hrs">${r.horas_motor} hrs</div></div>
@@ -299,7 +292,6 @@ function showDetail(i){
   showView('detalle');
 }
 
-// FIRMA
 function initFirma(){
   if(firmaInited)return;
   const canvas=document.getElementById('firma-canvas');
@@ -308,10 +300,7 @@ function initFirma(){
   firmaCtx=canvas.getContext('2d');
   firmaCtx.fillStyle='#ffffff';
   firmaCtx.fillRect(0,0,canvas.width,canvas.height);
-  firmaCtx.strokeStyle='#111';
-  firmaCtx.lineWidth=2.5;
-  firmaCtx.lineCap='round';
-  firmaCtx.lineJoin='round';
+  firmaCtx.strokeStyle='#111';firmaCtx.lineWidth=2.5;firmaCtx.lineCap='round';firmaCtx.lineJoin='round';
   const pos=(e)=>{const rect=canvas.getBoundingClientRect();const s=e.touches?e.touches[0]:e;return{x:(s.clientX-rect.left)*(canvas.width/rect.width),y:(s.clientY-rect.top)*(canvas.height/rect.height)};};
   canvas.addEventListener('mousedown',e=>{firmaDrawing=true;const p=pos(e);firmaCtx.beginPath();firmaCtx.moveTo(p.x,p.y);});
   canvas.addEventListener('mousemove',e=>{if(!firmaDrawing)return;const p=pos(e);firmaCtx.lineTo(p.x,p.y);firmaCtx.stroke();});
@@ -326,11 +315,10 @@ function initFirma(){
 function limpiarFirma(){
   if(!firmaCtx)return;
   const canvas=document.getElementById('firma-canvas');
-  firmaCtx.fillStyle='#ffffff';
-  firmaCtx.fillRect(0,0,canvas.width,canvas.height);
+  firmaCtx.fillStyle='#ffffff';firmaCtx.fillRect(0,0,canvas.width,canvas.height);
 }
 
-function firmaEstaVacia(){
+function firmaVacia(){
   const canvas=document.getElementById('firma-canvas');
   const data=firmaCtx.getImageData(0,0,canvas.width,canvas.height).data;
   for(let i=0;i<data.length;i+=4){if(data[i]<250||data[i+1]<250||data[i+2]<250)return false;}
@@ -356,9 +344,8 @@ async function doSave(){
   errEl.classList.add('hidden');sucEl.classList.add('hidden');
   if(!chasis||!cliente||!tractor||!fecha||!trabajos){errEl.textContent='Completa los campos obligatorios (*).';errEl.classList.remove('hidden');return;}
   if(!firmaNombre){errEl.textContent='Ingresa el nombre del cliente que firma.';errEl.classList.remove('hidden');return;}
-  if(firmaEstaVacia()){errEl.textContent='El cliente debe firmar antes de guardar.';errEl.classList.remove('hidden');return;}
-  const canvas=document.getElementById('firma-canvas');
-  const firmaImg=canvas.toDataURL('image/png');
+  if(firmaVacia()){errEl.textContent='El cliente debe firmar antes de guardar.';errEl.classList.remove('hidden');return;}
+  const firmaImg=document.getElementById('firma-canvas').toDataURL('image/png');
   const btn=document.getElementById('btn-save');
   btn.textContent='Guardando...';btn.disabled=true;
   try{
@@ -383,18 +370,106 @@ async function doSave(){
 }
 
 async function descargarPDF(){
-  const el=document.getElementById('detalle-content');
+  const r=currentRecord;
+  if(!r)return;
+  const firmaHTML=r.firma_imagen
+    ?`<tr><td colspan="2" style="padding:12px;border-bottom:1px solid #ddd">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">CONFORMIDAD DEL CLIENTE</div>
+        <div style="font-size:13px;margin-bottom:8px"><b>Firmado por:</b> ${r.firma_nombre||'—'}</div>
+        <img src="${r.firma_imagen}" style="height:70px;border:1px solid #ccc;border-radius:4px;background:#fff"/>
+        <div style="font-size:11px;color:#666;margin-top:6px">El cliente declara conformidad con el servicio realizado.</div>
+      </td></tr>`
+    :'';
+
+  const trabajosList=(r.trabajos||[]).map(t=>`<li style="margin-bottom:4px">✓ ${t}</li>`).join('');
+  const repuestosList=(r.repuestos||[]).length
+    ?`<tr><td colspan="2" style="padding:12px;border-bottom:1px solid #ddd">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">REPUESTOS UTILIZADOS</div>
+        <ul style="margin:0;padding-left:16px;font-size:13px">${(r.repuestos||[]).map(x=>`<li style="margin-bottom:4px">• ${x}</li>`).join('')}</ul>
+      </td></tr>`
+    :'';
+  const obsHTML=r.observaciones
+    ?`<tr><td colspan="2" style="padding:12px;border-bottom:1px solid #ddd">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">OBSERVACIONES</div>
+        <div style="font-size:13px;color:#333;font-style:italic">${r.observaciones}</div>
+      </td></tr>`
+    :'';
+
+  const html=`
+  <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;color:#111;background:#fff;padding:0">
+    <!-- ENCABEZADO -->
+    <div style="background:#1a3a1a;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:22px;font-weight:bold;letter-spacing:1px">MN AgroService</div>
+        <div style="font-size:12px;color:#a0c0a0;margin-top:2px">Reparación · Soldadura · Repuestos</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#a0c0a0">ORDEN DE TRABAJO N°${r.id}</div>
+        <div style="font-size:13px;font-weight:bold;margin-top:2px">${fmtDate(r.fecha)}</div>
+      </div>
+    </div>
+    <!-- TIPO SERVICIO -->
+    <div style="background:#f0f7f0;border-left:4px solid #2d6a2d;padding:12px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px">Tipo de Servicio</div>
+        <div style="font-size:18px;font-weight:bold;color:#1a3a1a;margin-top:2px">${r.tipo}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px">Horas de Motor</div>
+        <div style="font-size:24px;font-weight:bold;color:#2d6a2d;margin-top:2px">${r.horas_motor} hrs</div>
+      </div>
+    </div>
+    <!-- DATOS -->
+    <table style="width:100%;border-collapse:collapse;margin-top:0">
+      <tr style="background:#f9f9f9">
+        <td style="padding:12px 24px;border-bottom:1px solid #ddd;width:50%">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🚜 Equipo / Máquina</div>
+          <div style="font-size:15px;font-weight:bold">${r.tractor}</div>
+          <div style="font-size:12px;color:#555;margin-top:2px">Chasis: <b>${r.chasis}</b></div>
+        </td>
+        <td style="padding:12px 24px;border-bottom:1px solid #ddd;border-left:1px solid #ddd">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">👤 Cliente</div>
+          <div style="font-size:15px;font-weight:bold">${r.cliente}</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:12px 24px;border-bottom:1px solid #ddd">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🔧 Mecánico Responsable</div>
+          <div style="font-size:14px;font-weight:bold">${r.mecanico||'—'}</div>
+        </td>
+      </tr>
+      <tr style="background:#f9f9f9">
+        <td colspan="2" style="padding:12px 24px;border-bottom:1px solid #ddd">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">TRABAJOS REALIZADOS</div>
+          <ul style="margin:0;padding-left:16px;font-size:13px">${trabajosList}</ul>
+        </td>
+      </tr>
+      ${repuestosList}
+      ${obsHTML}
+      ${firmaHTML}
+    </table>
+    <!-- PIE -->
+    <div style="background:#f0f7f0;padding:10px 24px;text-align:center;font-size:11px;color:#666;border-top:2px solid #2d6a2d;margin-top:0">
+      MN AgroService · Sistema de Mantenciones · Documento generado el ${new Date().toLocaleDateString('es-CL')}
+    </div>
+  </div>`;
+
+  const tpl=document.getElementById('pdf-template');
+  tpl.innerHTML=html;
+  tpl.style.display='block';
+  const btn=document.querySelector('.btn-pdf');
+  btn.textContent='Generando...';btn.disabled=true;
   const opt={
-    margin:[10,10,10,10],
-    filename:'Orden-Trabajo-MN-AgroService.pdf',
+    margin:0,
+    filename:`OT-${r.chasis}-${r.fecha}.pdf`,
     image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true,backgroundColor:'#1c2b1c'},
+    html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
   };
-  const btn=document.querySelector('.btn-pdf');
-  btn.textContent='Generando PDF...';btn.disabled=true;
-  await html2pdf().set(opt).from(el).save();
-  btn.textContent='📄 Descargar PDF';btn.disabled=false;
+  await html2pdf().set(opt).from(tpl).save();
+  tpl.style.display='none';
+  tpl.innerHTML='';
+  btn.textContent='📄 Descargar Orden de Trabajo (PDF)';btn.disabled=false;
 }
 
 async function deleteRecord(id){
