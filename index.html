@@ -1,17 +1,17 @@
-
+cat > /mnt/user-data/outputs/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><title>MN AgroService - Registro de Mantenciones</title>
+<title>MN AgroService - Registro de Mantenciones</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0f1a0f;color:#e8f5e9;font-family:Georgia,serif;min-height:100vh;display:flex;flex-direction:column}
 header{background:#162116;border-bottom:1px solid #2a3d2a;position:sticky;top:0;z-index:100}
 .header-inner{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer}
-.logo-icon{font-size:28px}
 .logo-title{font-size:18px;font-weight:bold;color:#4ade80;letter-spacing:1px}
 .logo-sub{font-size:11px;color:#86a887;letter-spacing:2px;text-transform:uppercase}
 nav{display:flex;gap:8px}
@@ -35,6 +35,8 @@ h2{font-size:24px;font-weight:bold;margin-bottom:24px}
 input,select,textarea{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:8px;padding:10px 14px;color:#e8f5e9;font-size:14px;outline:none;width:100%;font-family:Georgia,serif}
 .btn{background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;white-space:nowrap;font-family:Georgia,serif}
 .btn-saved{background:#22c55e;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:default;font-family:Georgia,serif}
+.btn-pdf{background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;font-family:Georgia,serif;width:100%}
+.btn-del{background:#7f1d1d;color:#fca5a5;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;width:100%;margin-top:8px;font-family:Georgia,serif}
 .error{color:#f87171;font-size:13px;margin:8px 0}
 .back-btn{background:transparent;border:none;color:#4ade80;cursor:pointer;font-size:14px;margin-bottom:16px;padding:0;font-family:Georgia,serif}
 .result-header{display:flex;align-items:center;justify-content:space-between;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:10px;padding:16px 20px;margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -66,6 +68,10 @@ input,select,textarea{background:#1c2b1c;border:1px solid #2a3d2a;border-radius:
 .dl{list-style:none;display:flex;flex-direction:column;gap:6px}
 .dli{font-size:14px;padding:4px 0}
 .dobs{font-size:14px;color:#86a887;line-height:1.6;font-style:italic;background:#162116;padding:12px 16px;border-radius:8px;border-left:3px solid #4ade80}
+.firma-box{border:2px dashed #2a3d2a;border-radius:8px;background:#162116;padding:16px;text-align:center}
+.firma-canvas{border:1px solid #2a3d2a;border-radius:6px;background:#fff;cursor:crosshair;display:block;margin:0 auto;touch-action:none}
+.firma-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.firma-nombre{margin-bottom:10px}
 .login-card{max-width:400px;margin:40px auto;background:#1c2b1c;border:1px solid #2a3d2a;border-radius:12px;padding:32px;text-align:center;display:flex;flex-direction:column;gap:14px}
 .login-icon{font-size:40px}
 .login-title{font-size:22px;font-weight:bold}
@@ -89,13 +95,15 @@ textarea{resize:vertical}
 .loading{color:#86a887;font-size:14px;padding:20px 0}
 footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1px solid #2a3d2a}
 .hidden{display:none}
+/* PDF print styles */
+@media print{header,nav,.back-btn,.btn-pdf,.firma-btns,.no-print{display:none!important}body{background:#fff;color:#000}.detail-card{border:1px solid #ccc}.ds{border-top:1px solid #eee}}
 </style>
 </head>
 <body>
 <header>
   <div class="header-inner">
     <div class="logo" onclick="showView('home')">
-      <img src="full%20hd.png" style="height:100px;width:100px;object-fit:contain;border-radius:50%"/>
+      <img src="full%20hd.png" style="height:44px;width:44px;object-fit:contain;border-radius:50%"/>
       <div>
         <div class="logo-title">MN AgroService</div>
         <div class="logo-sub">Registro de Mantenciones</div>
@@ -140,8 +148,24 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
 
   <!-- DETALLE -->
   <div id="view-detalle" class="section hidden">
-    <button class="back-btn" onclick="showView('buscar')">← Volver al historial</button>
+    <button class="back-btn no-print" onclick="showView('buscar')">← Volver al historial</button>
     <div id="detalle-content"></div>
+    <!-- FIRMA -->
+    <div class="block" id="firma-section" style="margin-top:16px">
+      <div class="subtitle">✍️ Firma del Cliente</div>
+      <div class="firma-box">
+        <div class="fg firma-nombre">
+          <label>Nombre del cliente</label>
+          <input id="firma-nombre" placeholder="Nombre completo del cliente"/>
+        </div>
+        <p style="font-size:12px;color:#86a887;margin-bottom:10px">Firme en el recuadro de abajo con el dedo:</p>
+        <canvas id="firma-canvas" class="firma-canvas" width="500" height="150"></canvas>
+        <div class="firma-btns no-print">
+          <button class="btn" onclick="limpiarFirma()" style="background:#2a3d2a;color:#86a887;flex:1">🗑️ Limpiar firma</button>
+          <button class="btn-pdf" onclick="descargarPDF()" style="flex:2">📄 Descargar PDF con firma</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- LOGIN -->
@@ -153,7 +177,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
       <input id="admin-pass" type="password" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')doLogin()"/>
       <button class="btn" onclick="doLogin()">Ingresar</button>
       <div id="login-error" class="error hidden"></div>
-      <div class="hint">Contraseña: <code>0000</code></div>
+      <div class="hint">Contraseña: <code>mecanico123</code></div>
     </div>
   </div>
 
@@ -192,69 +216,66 @@ footer{text-align:center;padding:20px;font-size:12px;color:#4a6b4a;border-top:1p
   </div>
 </main>
 
-<footer>MN AgroService · Sistema de Mantenciones · Conectado </footer>
+<footer>MN AgroService · Sistema de Mantenciones · Reparación · Soldadura · Repuestos</footer>
 
 <script>
-const URL = 'https://fozsdegtzsnyjxbgxbjf.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvenNkZWd0enNueWp4Ymd4YmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDYwMjgsImV4cCI6MjA5NjAyMjAyOH0.SNF6mqL665SX-ot__BAutzfVGPGK0S8wwSgpt0hL7iw';
-const H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+const SURL='https://fozsdegtzsnyjxbgxbjf.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvenNkZWd0enNueWp4Ymd4YmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NDYwMjgsImV4cCI6MjA5NjAyMjAyOH0.SNF6mqL665SX-ot__BAutzfVGPGK0S8wwSgpt0hL7iw';
+const H={'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'};
+let adminOk=false, searchResults=[], firmaCtx=null, firmaDrawing=false;
 
-let currentView = 'home';
-let adminOk = false;
-let searchResults = [];
-
-async function api(path, opts={}) {
-  const r = await fetch(URL+'/rest/v1'+path, {headers:H, ...opts});
-  const t = await r.text();
-  return t ? JSON.parse(t) : [];
+async function api(path,opts={}){
+  const r=await fetch(SURL+'/rest/v1'+path,{headers:H,...opts});
+  const t=await r.text();
+  return t?JSON.parse(t):[];
 }
 
-function showView(v) {
-  ['home','buscar','detalle','login','panel'].forEach(x => {
+function showView(v){
+  ['home','buscar','detalle','login','panel'].forEach(x=>{
     document.getElementById('view-'+x).classList.add('hidden');
-    const b = document.getElementById('btn-'+x);
-    if(b) b.classList.remove('active');
+    const b=document.getElementById('btn-'+x);
+    if(b)b.classList.remove('active');
   });
-  if(v === 'panel' && !adminOk) v = 'login';
+  if(v==='panel'&&!adminOk)v='login';
   document.getElementById('view-'+v).classList.remove('hidden');
-  const b = document.getElementById('btn-'+(v==='login'?'panel':v));
-  if(b) b.classList.add('active');
-  currentView = v;
-  if(v === 'home') loadStats();
-  if(v === 'panel') loadPanelRecords();
-  const hc = document.getElementById('hero-chasis');
-  const sc = document.getElementById('search-chasis');
-  if(v === 'buscar' && hc && hc.value) sc.value = hc.value;
+  const b=document.getElementById('btn-'+(v==='login'?'panel':v));
+  if(b)b.classList.add('active');
+  if(v==='home')loadStats();
+  if(v==='panel')loadPanelRecords();
+  const hc=document.getElementById('hero-chasis');
+  const sc=document.getElementById('search-chasis');
+  if(v==='buscar'&&hc&&hc.value)sc.value=hc.value;
+  if(v==='detalle')setTimeout(initFirma,100);
 }
 
-async function loadStats() {
-  try {
-    const d = await api('/mantenciones?select=chasis,cliente');
-    document.getElementById('stat-total').textContent = d.length;
-    document.getElementById('stat-tractores').textContent = new Set(d.map(r=>r.chasis)).size;
-    document.getElementById('stat-clientes').textContent = new Set(d.map(r=>r.cliente)).size;
-  } catch(e){}
+async function loadStats(){
+  try{
+    const d=await api('/mantenciones?select=chasis,cliente');
+    document.getElementById('stat-total').textContent=d.length;
+    document.getElementById('stat-tractores').textContent=new Set(d.map(r=>r.chasis)).size;
+    document.getElementById('stat-clientes').textContent=new Set(d.map(r=>r.cliente)).size;
+  }catch(e){}
 }
 
-async function doSearch() {
-  const chasis = document.getElementById('search-chasis').value.trim().toUpperCase();
-  const errEl = document.getElementById('search-error');
-  const resEl = document.getElementById('search-result');
-  errEl.classList.add('hidden'); resEl.classList.add('hidden');
+async function doSearch(){
+  const chasis=document.getElementById('search-chasis').value.trim().toUpperCase();
+  const errEl=document.getElementById('search-error');
+  const resEl=document.getElementById('search-result');
+  errEl.classList.add('hidden');resEl.classList.add('hidden');
   if(!chasis){errEl.textContent='Ingresa un número de chasis.';errEl.classList.remove('hidden');return;}
-  resEl.innerHTML='<div class="loading">Buscando...</div>'; resEl.classList.remove('hidden');
-  try {
-    const d = await api('/mantenciones?chasis=ilike.'+encodeURIComponent(chasis)+'&order=fecha.desc');
+  resEl.innerHTML='<div class="loading">Buscando...</div>';resEl.classList.remove('hidden');
+  try{
+    const d=await api('/mantenciones?chasis=ilike.'+encodeURIComponent(chasis)+'&order=fecha.desc');
     if(!d.length){resEl.classList.add('hidden');errEl.textContent='No se encontraron registros para ese chasis.';errEl.classList.remove('hidden');return;}
-    searchResults = d;
-    resEl.innerHTML = `<div class="result-header"><div><div class="result-title">🚜 ${d[0].tractor}</div><div class="result-meta">Chasis: <b>${d[0].chasis}</b> · Cliente: <b>${d[0].cliente}</b></div></div><div class="badge">${d.length} servicio${d.length>1?'s':''}</div></div>`
-    + '<div class="timeline">' + d.map((r,i) => `<div class="tl-item" onclick="showDetail(${i})"><div class="tl-dot"></div><div class="tl-card"><div class="tl-top"><span class="tl-tipo">${r.tipo}</span><span class="tl-fecha">${fmtDate(r.fecha)}</span></div><div class="tl-works">${(r.trabajos||[]).slice(0,2).join(' · ')}${(r.trabajos||[]).length>2?' +'+(r.trabajos.length-2)+' más':''}</div><div class="tl-meta">🕐 ${r.horas_motor} hrs · ${r.mecanico||''}</div><div class="tl-link">Ver detalle completo →</div></div></div>`).join('') + '</div>';
-  } catch(e){errEl.textContent='Error al buscar.';errEl.classList.remove('hidden');resEl.classList.add('hidden');}
+    searchResults=d;
+    resEl.innerHTML=`<div class="result-header"><div><div class="result-title">🚜 ${d[0].tractor}</div><div class="result-meta">Chasis: <b>${d[0].chasis}</b> · Cliente: <b>${d[0].cliente}</b></div></div><div class="badge">${d.length} servicio${d.length>1?'s':''}</div></div>`
+    +'<div class="timeline">'+d.map((r,i)=>`<div class="tl-item" onclick="showDetail(${i})"><div class="tl-dot"></div><div class="tl-card"><div class="tl-top"><span class="tl-tipo">${r.tipo}</span><span class="tl-fecha">${fmtDate(r.fecha)}</span></div><div class="tl-works">${(r.trabajos||[]).slice(0,2).join(' · ')}${(r.trabajos||[]).length>2?' +'+(r.trabajos.length-2)+' más':''}</div><div class="tl-meta">🕐 ${r.horas_motor} hrs · ${r.mecanico||''}</div><div class="tl-link">Ver detalle completo →</div></div></div>`).join('')+'</div>';
+  }catch(e){errEl.textContent='Error al buscar.';errEl.classList.remove('hidden');resEl.classList.add('hidden');}
 }
 
-function showDetail(i) {
-  const r = searchResults[i];
-  document.getElementById('detalle-content').innerHTML = `
+function showDetail(i){
+  const r=searchResults[i];
+  document.getElementById('detalle-content').innerHTML=`
     <div class="detail-card">
       <div class="detail-head"><div><div class="detail-tipo">${r.tipo}</div><div class="detail-fecha">${fmtDateLong(r.fecha)}</div></div><div class="detail-hrs">${r.horas_motor} hrs</div></div>
       <div class="detail-grid">
@@ -264,72 +285,130 @@ function showDetail(i) {
       </div>
       <div class="ds"><div class="dst">Trabajos realizados</div><ul class="dl">${(r.trabajos||[]).map(t=>`<li class="dli">✓ ${t}</li>`).join('')}</ul></div>
       ${(r.repuestos||[]).length?`<div class="ds"><div class="dst">Repuestos utilizados</div><ul class="dl">${r.repuestos.map(x=>`<li class="dli">• ${x}</li>`).join('')}</ul></div>`:''}
-     ${r.observaciones?`<div class="ds"><div class="ds"><button onclick="descargarPDF()" style="background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;width:100%">📄 Descargar PDF</button></div>
+      ${r.observaciones?`<div class="ds"><div class="dst">Observaciones</div><div class="dobs">${r.observaciones}</div></div>`:''}
     </div>`;
   showView('detalle');
 }
 
-function doLogin() {
-  const p = document.getElementById('admin-pass').value;
-  const e = document.getElementById('login-error');
-  if(p === 'mecanico123'){adminOk=true;e.classList.add('hidden');showView('panel');}
+// FIRMA
+function initFirma(){
+  const canvas=document.getElementById('firma-canvas');
+  if(!canvas)return;
+  const w=Math.min(500,canvas.parentElement.offsetWidth-32);
+  canvas.width=w; canvas.height=150;
+  firmaCtx=canvas.getContext('2d');
+  firmaCtx.fillStyle='#fff';
+  firmaCtx.fillRect(0,0,canvas.width,canvas.height);
+  firmaCtx.strokeStyle='#1a1a1a';
+  firmaCtx.lineWidth=2;
+  firmaCtx.lineCap='round';
+
+  const getPos=(e)=>{
+    const rect=canvas.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-rect.left)*(canvas.width/rect.width),y:(src.clientY-rect.top)*(canvas.height/rect.height)};
+  };
+  canvas.addEventListener('mousedown',e=>{firmaDrawing=true;const p=getPos(e);firmaCtx.beginPath();firmaCtx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove',e=>{if(!firmaDrawing)return;const p=getPos(e);firmaCtx.lineTo(p.x,p.y);firmaCtx.stroke();});
+  canvas.addEventListener('mouseup',()=>firmaDrawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();firmaDrawing=true;const p=getPos(e);firmaCtx.beginPath();firmaCtx.moveTo(p.x,p.y);},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!firmaDrawing)return;const p=getPos(e);firmaCtx.lineTo(p.x,p.y);firmaCtx.stroke();},{passive:false});
+  canvas.addEventListener('touchend',()=>firmaDrawing=false);
+}
+
+function limpiarFirma(){
+  const canvas=document.getElementById('firma-canvas');
+  firmaCtx.fillStyle='#fff';
+  firmaCtx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+async function descargarPDF(){
+  const nombre=document.getElementById('firma-nombre').value||'Cliente';
+  const canvas=document.getElementById('firma-canvas');
+  const firmaImg=canvas.toDataURL('image/png');
+
+  // Agregar firma al detalle para el PDF
+  const firmaDiv=document.createElement('div');
+  firmaDiv.id='firma-para-pdf';
+  firmaDiv.style='padding:16px 24px;border-top:1px solid #2a3d2a;margin-top:8px';
+  firmaDiv.innerHTML=`<div style="font-size:11px;color:#86a887;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Firma del Cliente</div>
+    <div style="font-size:14px;margin-bottom:8px"><b>Nombre:</b> ${nombre}</div>
+    <img src="${firmaImg}" style="border:1px solid #ccc;border-radius:6px;max-width:300px;background:#fff"/>`;
+
+  const detalle=document.getElementById('detalle-content').querySelector('.detail-card');
+  detalle.appendChild(firmaDiv);
+
+  const opt={
+    margin:10,
+    filename:`Mantención-${nombre}.pdf`,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,backgroundColor:'#1c2b1c'},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  };
+
+  await html2pdf().set(opt).from(document.getElementById('detalle-content')).save();
+  detalle.removeChild(firmaDiv);
+}
+
+function doLogin(){
+  const p=document.getElementById('admin-pass').value;
+  const e=document.getElementById('login-error');
+  if(p==='mecanico123'){adminOk=true;e.classList.add('hidden');showView('panel');}
   else{e.textContent='Contraseña incorrecta.';e.classList.remove('hidden');}
 }
 
-async function doSave() {
-  const chasis = document.getElementById('f-chasis').value.trim();
-  const cliente = document.getElementById('f-cliente').value.trim();
-  const tractor = document.getElementById('f-tractor').value.trim();
-  const fecha = document.getElementById('f-fecha').value;
-  const trabajos = document.getElementById('f-trabajos').value;
-  const errEl = document.getElementById('save-error');
+async function doSave(){
+  const chasis=document.getElementById('f-chasis').value.trim();
+  const cliente=document.getElementById('f-cliente').value.trim();
+  const tractor=document.getElementById('f-tractor').value.trim();
+  const fecha=document.getElementById('f-fecha').value;
+  const trabajos=document.getElementById('f-trabajos').value;
+  const errEl=document.getElementById('save-error');
   errEl.classList.add('hidden');
   if(!chasis||!cliente||!tractor||!fecha||!trabajos){errEl.textContent='Completa los campos obligatorios (*).';errEl.classList.remove('hidden');return;}
-  const btn = document.getElementById('btn-save');
-  btn.textContent='Guardando...'; btn.disabled=true;
-  try {
-    await api('/mantenciones', {method:'POST', body:JSON.stringify({
-      chasis: chasis.toUpperCase(),
-      cliente, tractor, fecha,
-      tipo: document.getElementById('f-tipo').value,
-      horas_motor: parseInt(document.getElementById('f-horas').value)||0,
-      trabajos: trabajos.split('\n').map(t=>t.trim()).filter(Boolean),
-      repuestos: document.getElementById('f-repuestos').value.split('\n').map(t=>t.trim()).filter(Boolean),
-      observaciones: document.getElementById('f-obs').value,
-      mecanico: document.getElementById('f-mecanico').value
+  const btn=document.getElementById('btn-save');
+  btn.textContent='Guardando...';btn.disabled=true;
+  try{
+    await api('/mantenciones',{method:'POST',body:JSON.stringify({
+      chasis:chasis.toUpperCase(),cliente,tractor,fecha,
+      tipo:document.getElementById('f-tipo').value,
+      horas_motor:parseInt(document.getElementById('f-horas').value)||0,
+      trabajos:trabajos.split('\n').map(t=>t.trim()).filter(Boolean),
+      repuestos:document.getElementById('f-repuestos').value.split('\n').map(t=>t.trim()).filter(Boolean),
+      observaciones:document.getElementById('f-obs').value,
+      mecanico:document.getElementById('f-mecanico').value
     })});
-    btn.textContent='✓ ¡Guardado!'; btn.className='btn-saved';
+    btn.textContent='✓ ¡Guardado!';btn.className='btn-saved';
     ['f-chasis','f-cliente','f-tractor','f-fecha','f-horas','f-mecanico','f-trabajos','f-repuestos','f-obs'].forEach(id=>document.getElementById(id).value='');
     setTimeout(()=>{btn.textContent='Guardar Registro';btn.className='btn';btn.disabled=false;},3000);
     loadPanelRecords();
-  } catch(e){errEl.textContent='Error al guardar: '+e.message;errEl.classList.remove('hidden');btn.textContent='Guardar Registro';btn.disabled=false;}
+  }catch(e){errEl.textContent='Error al guardar: '+e.message;errEl.classList.remove('hidden');btn.textContent='Guardar Registro';btn.disabled=false;}
 }
 
-async function loadPanelRecords() {
-  const el = document.getElementById('panel-records');
+async function deleteRecord(id){
+  if(!confirm('¿Seguro que deseas eliminar este registro?'))return;
+  try{
+    await fetch(SURL+'/rest/v1/mantenciones?id=eq.'+id,{method:'DELETE',headers:{...H,'Prefer':'return=minimal'}});
+    loadPanelRecords();
+  }catch(e){alert('Error al eliminar');}
+}
+
+async function loadPanelRecords(){
+  const el=document.getElementById('panel-records');
   el.innerHTML='<div class="loading">Cargando...</div>';
-  try {
-    const d = await api('/mantenciones?select=*&order=fecha.desc');
+  try{
+    const d=await api('/mantenciones?select=*&order=fecha.desc');
     if(!d.length){el.innerHTML='<div class="loading">Sin registros aún.</div>';return;}
-    el.innerHTML='<div class="rec-grid">'+d.map(r=>`<div class="rec-card"><div class="rec-top"><span class="rec-tipo">${r.tipo}</span><span class="rec-fecha">${new Date(r.fecha+'T12:00:00').toLocaleDateString('es-CL')}</span></div><div class="rec-tractor">${r.tractor}</div><div class="rec-chasis">Chasis: ${r.chasis}</div><div class="rec-meta">👤 ${r.cliente} · 🕐 ${r.horas_motor} hrs</div><button onclick="deleteRecord(${r.id})" style="margin-top:8px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;width:100%">🗑️ Eliminar registro</button></div>`).join('')+'</div>';
-  } catch(e){el.innerHTML='<div class="error">Error al cargar registros.</div>';}
+    el.innerHTML='<div class="rec-grid">'+d.map(r=>`<div class="rec-card"><div class="rec-top"><span class="rec-tipo">${r.tipo}</span><span class="rec-fecha">${new Date(r.fecha+'T12:00:00').toLocaleDateString('es-CL')}</span></div><div class="rec-tractor">${r.tractor}</div><div class="rec-chasis">Chasis: ${r.chasis}</div><div class="rec-meta">👤 ${r.cliente} · 🕐 ${r.horas_motor} hrs</div><button class="btn-del" onclick="deleteRecord(${r.id})">🗑️ Eliminar</button></div>`).join('')+'</div>';
+  }catch(e){el.innerHTML='<div class="error">Error al cargar.</div>';}
 }
 
 function fmtDate(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'})}
 function fmtDateLong(f){return new Date(f+'T12:00:00').toLocaleDateString('es-CL',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}
-async function deleteRecord(id) {
-  if(!confirm('¿Seguro que deseas eliminar este registro?')) return;
-  try {
-    await api('/mantenciones?id=eq.'+id, {method:'DELETE', prefer:'return=minimal'});
-    loadPanelRecords();
-  } catch(e){ alert('Error al eliminar'); }
-}
-function descargarPDF() {
-  const el = document.getElementById('detalle-content');
-  html2pdf().set({margin:10, filename:'mantención.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'}}).from(el).save();
-}
+
 loadStats();
 </script>
 </body>
 </html>
-
+HTMLEOF
+echo "OK"
