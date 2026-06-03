@@ -264,7 +264,7 @@ function showDetail(i) {
       </div>
       <div class="ds"><div class="dst">Trabajos realizados</div><ul class="dl">${(r.trabajos||[]).map(t=>`<li class="dli">✓ ${t}</li>`).join('')}</ul></div>
       ${(r.repuestos||[]).length?`<div class="ds"><div class="dst">Repuestos utilizados</div><ul class="dl">${r.repuestos.map(x=>`<li class="dli">• ${x}</li>`).join('')}</ul></div>`:''}
-      ${r.observaciones?`<div class="ds"><button onclick="descargarPDF()" style="background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;width:100%">📄 Descargar PDF</button></div>
+     ${r.observaciones?`<div class="ds"><div class="ds"><button onclick="descargarPDF()" style="background:#4ade80;color:#0a120a;border:none;border-radius:8px;padding:10px 22px;font-weight:bold;font-size:14px;cursor:pointer;width:100%">📄 Descargar PDF</button></div>
     </div>`;
   showView('detalle');
 }
