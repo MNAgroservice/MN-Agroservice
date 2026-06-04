@@ -368,39 +368,41 @@ async function doSave(){
   }catch(e){errEl.textContent='Error al guardar: '+e.message;errEl.classList.remove('hidden');btn.textContent='💾 Guardar Registro con Firma';btn.disabled=false;}
 }
 
-async function descargarPDF(){
+function descargarPDF(){
   const r=currentRecord;
   if(!r)return;
 
-  const firmaHTML=r.firma_imagen
-    ?`<tr><td colspan="2" style="padding:16px 24px;border-bottom:1px solid #ddd">
-        <div style="font-size:11px;color:#000;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">CONFORMIDAD DEL CLIENTE</div>
-        <div style="font-size:13px;color:#000;margin-bottom:10px"><b>Nombre:</b> ${r.firma_nombre||'—'}</div>
-        <div style="font-size:12px;color:#000;margin-bottom:6px"><b>Firma:</b></div>
-        <img src="${r.firma_imagen}" style="height:80px;border:1px solid #999;background:#fff;display:block" crossorigin="anonymous"/>
-        <div style="font-size:11px;color:#333;margin-top:8px;font-style:italic">Conforme con el servicio realizado.</div>
-      </td></tr>`
-    :'<tr><td colspan="2" style="padding:12px 24px;border-bottom:1px solid #ddd;font-size:12px;color:#666">Sin firma registrada</td></tr>';
-    
-
-  const trabajosList=(r.trabajos||[]).map(t=>`<li style="margin-bottom:5px;color:#000;font-size:13px">${t}</li>`).join('');
-  const repuestosList=(r.repuestos||[]).length
-    ?`<tr><td colspan="2" style="padding:14px 24px;border-bottom:1px solid #ddd;background:#f9f9f9">
+  const trabajosList=(r.trabajos||[]).map(t=>`<li style="margin-bottom:6px;font-size:13px;color:#000">${t}</li>`).join('');
+  const repuestosList=(r.repuestos&&r.repuestos.length)
+    ?`<div style="padding:14px 24px;border-bottom:1px solid #ddd;background:#f9f9f9">
         <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:bold">REPUESTOS UTILIZADOS</div>
-        <ul style="margin:0;padding-left:18px;color:#000">${(r.repuestos||[]).map(x=>`<li style="margin-bottom:5px;font-size:13px;color:#000">${x}</li>`).join('')}</ul>
-      </td></tr>`
+        <ul style="margin:0;padding-left:18px">${r.repuestos.map(x=>`<li style="margin-bottom:6px;font-size:13px;color:#000">${x}</li>`).join('')}</ul>
+      </div>`
     :'';
   const obsHTML=r.observaciones
-    ?`<tr><td colspan="2" style="padding:14px 24px;border-bottom:1px solid #ddd">
+    ?`<div style="padding:14px 24px;border-bottom:1px solid #ddd">
         <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:bold">OBSERVACIONES</div>
         <div style="font-size:13px;color:#000;font-style:italic">${r.observaciones}</div>
-      </td></tr>`
+      </div>`
+    :'';
+  const firmaHTML=r.firma_imagen
+    ?`<div style="padding:16px 24px;border-bottom:1px solid #ddd">
+        <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:bold">CONFORMIDAD DEL CLIENTE</div>
+        <div style="font-size:13px;color:#000;margin-bottom:12px"><b>Firmado por:</b> ${r.firma_nombre||'—'}</div>
+        <img src="${r.firma_imagen}" style="height:90px;max-width:280px;border:1px solid #999;background:#fff;display:block;margin-bottom:8px"/>
+        <div style="font-size:11px;color:#555;font-style:italic">El cliente declara conformidad con el servicio realizado.</div>
+      </div>`
     :'';
 
-  const html=`
-  <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;color:#000;background:#fff;padding:0">
-    <div style="background:#1a3a1a;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:22px;font-weight:bold;letter-spacing:1px;color:#fff">MN AgroService</div>
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;background:#fff;color:#000;padding:20px}
+    @media print{body{padding:0}button{display:none}}
+  </style></head><body>
+  <div style="max-width:700px;margin:0 auto;border:1px solid #ddd">
+    <div style="background:#1a3a1a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:20px;font-weight:bold;color:#fff">MN AgroService</div>
       <div style="text-align:right">
         <div style="font-size:11px;color:#ccc">ORDEN DE TRABAJO N°${r.id}</div>
         <div style="font-size:13px;font-weight:bold;color:#fff;margin-top:2px">${fmtDate(r.fecha)}</div>
@@ -408,63 +410,46 @@ async function descargarPDF(){
     </div>
     <div style="background:#f0f7f0;border-left:4px solid #2d6a2d;padding:12px 24px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold">Tipo de Servicio</div>
-        <div style="font-size:18px;font-weight:bold;color:#000;margin-top:2px">${r.tipo}</div>
+        <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold">Tipo de Servicio</div>
+        <div style="font-size:17px;font-weight:bold;color:#000;margin-top:2px">${r.tipo}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold">Horas de Motor</div>
-        <div style="font-size:24px;font-weight:bold;color:#000;margin-top:2px">${r.horas_motor} hrs</div>
+        <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold">Horas de Motor</div>
+        <div style="font-size:22px;font-weight:bold;color:#000;margin-top:2px">${r.horas_motor} hrs</div>
       </div>
     </div>
-    <table style="width:100%;border-collapse:collapse">
-      <tr style="background:#f9f9f9">
-        <td style="padding:14px 24px;border-bottom:1px solid #ddd;width:50%;vertical-align:top">
-          <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:bold">Equipo / Maquina</div>
-          <div style="font-size:15px;font-weight:bold;color:#000">${r.tractor}</div>
-          <div style="font-size:13px;color:#000;margin-top:3px">Chasis: <b>${r.chasis}</b></div>
-        </td>
-        <td style="padding:14px 24px;border-bottom:1px solid #ddd;border-left:1px solid #ddd;vertical-align:top">
-          <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:bold">Cliente</div>
-          <div style="font-size:15px;font-weight:bold;color:#000">${r.cliente}</div>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="2" style="padding:14px 24px;border-bottom:1px solid #ddd">
-          <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:bold">Mecanico Responsable</div>
-          <div style="font-size:14px;font-weight:bold;color:#000">${r.mecanico||'—'}</div>
-        </td>
-      </tr>
-      <tr style="background:#f9f9f9">
-        <td colspan="2" style="padding:14px 24px;border-bottom:1px solid #ddd">
-          <div style="font-size:11px;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:bold">TRABAJOS REALIZADOS</div>
-          <ul style="margin:0;padding-left:18px;color:#000">${trabajosList}</ul>
-        </td>
-      </tr>
-      ${repuestosList}
-      ${obsHTML}
-      ${firmaHTML}
-    </table>
-    <div style="background:#1a3a1a;padding:10px 24px;text-align:center;font-size:11px;color:#fff;margin-top:0">
+    <div style="display:flex;border-bottom:1px solid #ddd;background:#f9f9f9">
+      <div style="padding:14px 24px;width:50%;border-right:1px solid #ddd">
+        <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold;margin-bottom:4px">Equipo / Maquina</div>
+        <div style="font-size:15px;font-weight:bold;color:#000">${r.tractor}</div>
+        <div style="font-size:12px;color:#000;margin-top:3px">Chasis: <b>${r.chasis}</b></div>
+      </div>
+      <div style="padding:14px 24px;width:50%">
+        <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold;margin-bottom:4px">Cliente</div>
+        <div style="font-size:15px;font-weight:bold;color:#000">${r.cliente}</div>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-bottom:1px solid #ddd">
+      <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold;margin-bottom:4px">Mecanico Responsable</div>
+      <div style="font-size:14px;font-weight:bold;color:#000">${r.mecanico||'—'}</div>
+    </div>
+    <div style="padding:14px 24px;border-bottom:1px solid #ddd;background:#f9f9f9">
+      <div style="font-size:10px;color:#000;text-transform:uppercase;letter-spacing:1px;font-weight:bold;margin-bottom:8px">TRABAJOS REALIZADOS</div>
+      <ul style="margin:0;padding-left:18px">${trabajosList}</ul>
+    </div>
+    ${repuestosList}
+    ${obsHTML}
+    ${firmaHTML}
+    <div style="background:#1a3a1a;padding:10px 24px;text-align:center;font-size:11px;color:#fff">
       MN AgroService · Documento generado el ${new Date().toLocaleDateString('es-CL')}
     </div>
-  </div>`;
+  </div>
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
 
-  const tpl=document.getElementById('pdf-template');
-  tpl.innerHTML=html;
-  tpl.style.display='block';
-  const btn=document.querySelector('.btn-pdf');
-  btn.textContent='Generando...';btn.disabled=true;
-  const opt={
-    margin:0,
-    filename:`OT-${r.chasis}-${r.fecha}.pdf`,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-  };
-  await html2pdf().set(opt).from(tpl).save();
-  tpl.style.display='none';
-  tpl.innerHTML='';
-  btn.textContent='📄 Descargar Orden de Trabajo (PDF)';btn.disabled=false;
+  const ventana=window.open('','_blank');
+  ventana.document.write(html);
+  ventana.document.close();
 }
 
 async function deleteRecord(id){
