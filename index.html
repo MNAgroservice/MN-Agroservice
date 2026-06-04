@@ -101,7 +101,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#6e7681;border-top:1p
 <header>
   <div class="header-inner">
     <div class="logo" onclick="showView('home')">
-      <img src="full%20hd.png" style="height:44px;width:44px;object-fit:contain;border-radius:50%"/>
+      <img src="full%20hd.png" style="height:120px;width:120px;object-fit:contain;border-radius:50%"/>
       <div>
         <div class="logo-title">MN AgroService</div>
         <div class="logo-sub">Registro de Mantenciones</div>
@@ -135,7 +135,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#6e7681;border-top:1p
 
   <!-- BUSCAR -->
   <div id="view-buscar" class="section hidden">
-    <h2>Consulta por Número de Chasis</h2>
+    <h2>Consulta por Número de Chasis o patente</h2>
     <div class="search-row">
       <input id="search-chasis" placeholder="Ingresa el número de chasis..." onkeydown="if(event.key==='Enter')doSearch()"/>
       <button class="btn" onclick="doSearch()">Buscar</button>
@@ -160,7 +160,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#6e7681;border-top:1p
       <input id="admin-pass" type="password" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')doLogin()"/>
       <button class="btn" onclick="doLogin()">Ingresar</button>
       <div id="login-error" class="error hidden"></div>
-      <div class="hint">Contraseña: <code>mecanico123</code></div>
+      <div class="hint">Contraseña: <code>0000</code></div>
     </div>
   </div>
 
@@ -211,7 +211,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:#6e7681;border-top:1p
   </div>
 </main>
 
-<footer>MN AgroService · Sistema de Mantenciones · Reparación · Soldadura · Repuestos</footer>
+<footer>MN AgroService Spa · Contacto.mnagroservice@gmail.com</footer>
 
 <!-- PLANTILLA PDF (invisible) -->
 <div id="pdf-template" style="display:none"></div>
